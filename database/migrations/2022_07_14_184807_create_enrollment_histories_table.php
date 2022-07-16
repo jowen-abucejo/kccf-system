@@ -13,13 +13,14 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('users', function (Blueprint $table) {
+        Schema::create('enrollment_histories', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
-            $table->rememberToken();
+            $table->foreignId('student_id')->constrained();
+            $table->foreignId('school_setting_id')->constrained();
+            $table->foreignId('program_id')->constrained();
+            $table->foreignId('level_id')->constrained();
+            $table->string('status', 20)->nullable()->default('ENLISTED');
+            $table->boolean('registration_form_generated')->nullable()->default(false);
             $table->foreignId('created_by')->nullable()->constrained('users');
             $table->foreignId('updated_by')->nullable()->constrained('users');
             $table->foreignId('deleted_by')->nullable()->constrained('users');
@@ -35,6 +36,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('users');
+        Schema::dropIfExists('enrollment_histories');
     }
 };
