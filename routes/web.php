@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\SubjectController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -15,4 +16,10 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
+});
+
+Route::controller(SubjectController::class)->group(function () {
+    Route::get('/subjects', 'index');
+    Route::get('/subjects/{id}', 'show');
+    Route::post('/subjects', 'store');
 });

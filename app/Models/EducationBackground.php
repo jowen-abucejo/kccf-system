@@ -19,11 +19,11 @@ class EducationBackground extends Model
         'registration_id',
         'school_name',
         'school_address',
-        'year_attended',
-        'course',
-        'strand',
-        'year_level',
+        'academic_year',
+        'program',
     ];
+
+    public $timestamps = false;
 
     /**
      * All of the relationships to be touched.

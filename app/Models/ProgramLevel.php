@@ -26,6 +26,17 @@ class ProgramLevel extends Model
 
     public $timestamps = false;
 
+
+    /**
+     * Get the user that soft deleted the ProgramLevel
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function deletedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'deleted_by')->withTrashed();
+    }
+
     /**
      * Get all of the levels for the ProgramLevel
      *
@@ -37,12 +48,12 @@ class ProgramLevel extends Model
     }
 
     /**
-     * Get the user that soft deleted the ProgramLevel
+     * Get all of the programs for the ProgramLevel
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function deletedBy(): BelongsTo
+    public function programs(): HasMany
     {
-        return $this->belongsTo(User::class, 'deleted_by')->withTrashed();
+        return $this->hasMany(Program::class)->withTrashed();
     }
 }

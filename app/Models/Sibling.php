@@ -16,6 +16,7 @@ class Sibling extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'id',
         'registration_id',
         'last_name',
         'first_name',
@@ -23,6 +24,8 @@ class Sibling extends Model
         'name_suffix',
         'birth_date'
     ];
+
+    public $timestamps = false;
 
     /**
      * All of the relationships to be touched.

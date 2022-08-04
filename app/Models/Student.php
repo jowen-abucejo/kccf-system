@@ -25,7 +25,11 @@ class Student extends Model
     protected $fillable = [
         'student_number',
         'user_id',
-        'course_id',
+        'school_setting_id',
+        'program_id',
+        'level_id',
+        'regular',
+        'student_type_id',
         'created_by',
         'updated_by',
         'deleted_by'
@@ -71,6 +75,16 @@ class Student extends Model
         return $this->belongsTo(Level::class)->withTrashed();
     }
 
+    /**
+     * Get the program that owns the Student
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function program(): BelongsTo
+    {
+        return $this->belongsTo(Program::class)->withTrashed();
+    }
+
 
     /**
      * Get the student registration associated with the Student
@@ -79,7 +93,27 @@ class Student extends Model
      */
     public function registration(): HasOne
     {
-        return $this->hasOne(StudentRegistration::class);
+        return $this->hasOne(StudentRegistration::class, 'student_id');
+    }
+
+    /**
+     * Get the schoolSetting that owns the Student
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function schoolSetting(): BelongsTo
+    {
+        return $this->belongsTo(SchoolSetting::class)->withTrashed();
+    }
+
+    /**
+     * Get the student_type that owns the Student
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function student_type(): BelongsTo
+    {
+        return $this->belongsTo(StudentType::class);
     }
 
     /**
@@ -99,6 +133,6 @@ class Student extends Model
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class)->withTrashed();
     }
 }

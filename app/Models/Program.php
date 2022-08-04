@@ -20,9 +20,9 @@ class Program extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'program_level_id',
         'code',
         'description',
-        'major',
         'comments',
         'created_by',
         'updated_by',
@@ -58,6 +58,36 @@ class Program extends Model
     public function enrollmentHistories(): HasMany
     {
         return $this->hasMany(EnrollmentHistory::class);
+    }
+
+    /**
+     * Get the programLevel that owns the Program
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function programLevel(): BelongsTo
+    {
+        return $this->belongsTo(ProgramLevel::class)->withTrashed();
+    }
+
+    /**
+     * Get all of the student registrations for the Program
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function studentRegistrations(): HasMany
+    {
+        return $this->hasMany(StudentRegistration::class);
+    }
+
+    /**
+     * Get all of the students for the Program
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function students(): HasMany
+    {
+        return $this->hasMany(Student::class)->withTrashed();
     }
 
     /**

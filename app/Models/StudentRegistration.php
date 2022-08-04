@@ -21,11 +21,16 @@ class StudentRegistration extends Model
     protected $fillable = [
         'user_id',
         'student_id',
+        'school_setting_id',
+        'program_id',
+        'level_id',
+        'student_type_id',
         'last_name',
         'first_name',
         'middle_name',
         'name_suffix',
         'sex',
+        'civil_status',
         'birth_date',
         'birth_place',
         'address',
@@ -34,7 +39,8 @@ class StudentRegistration extends Model
         'religion',
         'other_info',
         'created_by',
-        'updated_by'
+        'updated_by',
+        'created_at'
     ];
 
     /**
@@ -79,6 +85,26 @@ class StudentRegistration extends Model
     }
 
     /**
+     * Get the level that owns the StudentRegistration
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function level(): BelongsTo
+    {
+        return $this->belongsTo(Level::class)->withTrashed();
+    }
+
+    /**
+     * Get the program that owns the StudentRegistration
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function program(): BelongsTo
+    {
+        return $this->belongsTo(Program::class)->withTrashed();
+    }
+
+    /**
      * Get the school setting that owns the StudentRegistration
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -105,7 +131,17 @@ class StudentRegistration extends Model
      */
     public function student(): BelongsTo
     {
-        return $this->belongsTo(Student::class, 'student_id');
+        return $this->belongsTo(Student::class, 'student_id')->withTrashed();
+    }
+
+    /**
+     * Get the student_type that owns the StudentRegistration
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function student_type(): BelongsTo
+    {
+        return $this->belongsTo(StudentType::class);
     }
 
     /**

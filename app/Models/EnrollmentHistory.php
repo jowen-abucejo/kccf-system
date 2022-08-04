@@ -23,6 +23,7 @@ class EnrollmentHistory extends Model
         'school_setting_id',
         'program_id',
         'level_id',
+        'student_type_id',
         'status',
         'registration_form_generated',
         'created_by',
@@ -78,6 +79,16 @@ class EnrollmentHistory extends Model
     public function program(): BelongsTo
     {
         return $this->belongsTo(Program::class)->withTrashed();
+    }
+
+    /**
+     * Get the studentType that owns the EnrollmentHistory
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function studentType(): BelongsTo
+    {
+        return $this->belongsTo(StudentType::class);
     }
 
     /**

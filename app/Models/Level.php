@@ -57,12 +57,22 @@ class Level extends Model
     }
 
     /**
+     * Get all of the students registration for the Level
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function studentRegistrations(): HasMany
+    {
+        return $this->hasMany(StudentRegistration::class);
+    }
+
+    /**
      * Get all of the students for the Level
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function students(): HasMany
     {
-        return $this->hasMany(Student::class);
+        return $this->hasMany(Student::class)->withTrashed();
     }
 }

@@ -17,10 +17,11 @@ return new class extends Migration
             $table->id();
             $table->string('student_number', 15)->unique();
             $table->foreignId('user_id')->constrained();
+            $table->foreignId('school_setting_id')->constrained();
             $table->foreignId('program_id')->constrained();
             $table->foreignId('level_id')->constrained();
             $table->boolean('regular')->nullable()->default(true);
-            $table->string('student_type', 20);
+            $table->foreignId('student_type_id')->constrained();
             $table->foreignId('created_by')->nullable()->constrained('users');
             $table->foreignId('updated_by')->nullable()->constrained('users');
             $table->foreignId('deleted_by')->nullable()->constrained('users');

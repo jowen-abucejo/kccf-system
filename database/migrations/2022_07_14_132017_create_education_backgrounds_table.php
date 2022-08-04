@@ -18,10 +18,8 @@ return new class extends Migration
             $table->foreignId('registration_id')->constrained('student_registrations');
             $table->string('school_name');
             $table->string('school_address');
-            $table->string('year_attended');
-            $table->string('course')->nullable();
-            $table->string('strand')->nullable();
-            $table->string('year_level');
+            $table->string('academic_year', 9);
+            $table->string('program')->nullable();
         });
     }
 

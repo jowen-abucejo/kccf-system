@@ -21,11 +21,13 @@ return new class extends Migration
             $table->string('middle_name', 50)->nullable();
             $table->string('name_suffix', 10)->nullable();
             $table->date('birth_date');
-            $table->json('address');
-            $table->string('contact_number', 10);
-            $table->string('email', 50)->nullable();
+            $table->date('occupation')->nullable();
+            $table->json('address')->nullable();
+            $table->string('contact_number', 10)->nullable();
+            $table->string('email', 100)->nullable();
             $table->string('relationship');
-            $table->boolean('isDeceased')->nullable()->default(false);
+            $table->boolean('is_deceased')->nullable()->default(false);
+            $table->boolean('is_guardian')->nullable()->default(false);
         });
     }
 

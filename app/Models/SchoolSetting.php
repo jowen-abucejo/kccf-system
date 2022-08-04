@@ -20,7 +20,7 @@ class SchoolSetting extends Model
      */
     protected $fillable = [
         'academic_year',
-        'semester',
+        'term_id',
         'encoding_start_date',
         'encoding_end_date',
         'enrollment_start_date',
@@ -78,6 +78,16 @@ class SchoolSetting extends Model
     public function studentRegistrations(): HasMany
     {
         return $this->hasMany(StudentRegistration::class);
+    }
+
+    /**
+     * Get all of the students for the SchoolSetting
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function students(): HasMany
+    {
+        return $this->hasMany(Student::class)->withTrashed();
     }
 
     /**

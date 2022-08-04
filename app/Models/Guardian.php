@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\AsArrayObject;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -22,12 +23,16 @@ class Guardian extends Model
         'middle_name',
         'name_suffix',
         'birth_date',
+        'occupation',
         'address',
         'contact_number',
         'email',
         'relationship',
-        'isDeceased'
+        'is_deceased',
+        'is_guardian',
     ];
+
+    public $timestamps = false;
 
     /**
      * The attributes that should be cast.
