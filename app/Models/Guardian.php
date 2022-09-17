@@ -40,6 +40,7 @@ class Guardian extends Model
      * @var array
      */
     protected $casts = [
+        'birth_date' => 'date',
         'address' => AsArrayObject::class,
     ];
 

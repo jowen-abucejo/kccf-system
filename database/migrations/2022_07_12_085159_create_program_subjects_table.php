@@ -15,10 +15,10 @@ return new class extends Migration
     {
         Schema::create('program_subjects', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('program_id')->nullable()->constrained('programs');
-            $table->foreignId('subject_id')->nullable()->constrained('subjects');
-            $table->foreignId('term_id')->constrained();
-            $table->foreignId('level_id')->constrained();
+            $table->foreignId('program_id')->nullable()->constrained();
+            $table->foreignId('subject_id')->nullable()->constrained();
+            $table->foreignId('term_id')->nullable()->constrained();
+            $table->foreignId('level_id')->nullable()->constrained();
             $table->foreignId('created_by')->nullable()->constrained('users');
             $table->foreignId('updated_by')->nullable()->constrained('users');
             $table->foreignId('deleted_by')->nullable()->constrained('users');

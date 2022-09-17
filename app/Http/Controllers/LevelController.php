@@ -14,7 +14,7 @@ class LevelController extends Controller
      */
     public function index()
     {
-        $levels = Level::get()->groupBy('program_level_id');
+        $levels = Level::all();
         return response()->json($levels);
     }
 

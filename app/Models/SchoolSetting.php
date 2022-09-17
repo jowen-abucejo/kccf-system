@@ -31,6 +31,18 @@ class SchoolSetting extends Model
     ];
 
     /**
+     * The attributes that should be cast.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'encoding_start_date' => 'datetime',
+        'encoding_end_date' => 'datetime',
+        'enrollment_start_date' => 'datetime',
+        'enrollment_end_date' => 'datetime',
+    ];
+
+    /**
      * Get the user that created the record of SchoolSetting
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo

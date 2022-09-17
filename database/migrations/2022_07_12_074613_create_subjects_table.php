@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('subjects', function (Blueprint $table) {
             $table->id();
-            $table->string('code');
+            $table->string('code', 20);
             $table->string('description');
             $table->decimal('lab_units', 1, 0)->nullable()->default(0);
             $table->decimal('lec_units', 1, 0)->nullable()->default(0);

@@ -109,7 +109,7 @@ class Subject extends Model
      */
     public function programs(): BelongsToMany
     {
-        return $this->belongsToMany(Program::class, ProgramSubject::class);
+        return $this->belongsToMany(Program::class, ProgramSubject::class)->withPivot('term_id', 'level_id');
     }
 
     /**

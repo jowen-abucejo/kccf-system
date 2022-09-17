@@ -21,6 +21,8 @@ class ProgramSubject extends Model
     protected $fillable = [
         'program_id',
         'subject_id',
+        'term_id',
+        'level_id',
         'created_by',
         'updated_by',
         'deleted_by'

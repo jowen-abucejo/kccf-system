@@ -97,7 +97,7 @@ class Program extends Model
      */
     public function subjects(): BelongsToMany
     {
-        return $this->belongsToMany(Subject::class, ProgramSubject::class);
+        return $this->belongsToMany(Subject::class, ProgramSubject::class)->withPivot('level_id', 'term_id');
     }
 
     /**

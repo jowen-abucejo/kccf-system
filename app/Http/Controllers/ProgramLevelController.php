@@ -14,7 +14,8 @@ class ProgramLevelController extends Controller
      */
     public function index()
     {
-        //
+        $program_levels = ProgramLevel::all();
+        return response()->json($program_levels);
     }
 
     /**

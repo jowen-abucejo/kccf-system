@@ -17,12 +17,12 @@ class PermissionSeeder extends Seeder
     {
         //
         $roles = [
-            ['name' => 'admin'],
-            ['name' => 'registrar'],
-            ['name' => 'cashier'],
-            ['name' => 'instructor'],
-            ['name' => 'student'],
-            ['name' => 'applicant'],
+            ['name' => 'admin', 'guard_name' => 'api'],
+            ['name' => 'registrar', 'guard_name' => 'api'],
+            ['name' => 'cashier', 'guard_name' => 'api'],
+            ['name' => 'instructor', 'guard_name' => 'api'],
+            ['name' => 'student', 'guard_name' => 'api'],
+            ['name' => 'applicant', 'guard_name' => 'api'],
         ];
 
         $permissions = [

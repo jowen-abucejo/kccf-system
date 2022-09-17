@@ -28,6 +28,15 @@ class Sibling extends Model
     public $timestamps = false;
 
     /**
+     * The attributes that should be cast.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'birth_date' => 'date',
+    ];
+
+    /**
      * All of the relationships to be touched.
      *
      * @var array

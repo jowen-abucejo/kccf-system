@@ -14,7 +14,7 @@ class StudentTypeController extends Controller
      */
     public function index()
     {
-        $student_types = StudentType::where('id', '>', 1)->get();
+        $student_types = StudentType::all();
 
         return response()->json($student_types);
     }

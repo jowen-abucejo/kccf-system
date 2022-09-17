@@ -14,7 +14,8 @@ class TermController extends Controller
      */
     public function index()
     {
-        return response()->json(Term::all());
+        $terms = Term::all();
+        return response()->json($terms);
     }
 
     /**

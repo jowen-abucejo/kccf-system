@@ -15,13 +15,13 @@ return new class extends Migration
     {
         Schema::create('guardians', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('registration_id')->constrained('student_registrations');
+            $table->foreignId('registration_id')->constrained('student_registrations')->onDelete('cascade');
             $table->string('last_name', 50);
             $table->string('first_name', 50);
             $table->string('middle_name', 50)->nullable();
             $table->string('name_suffix', 10)->nullable();
             $table->date('birth_date');
-            $table->date('occupation')->nullable();
+            $table->string('occupation')->nullable();
             $table->json('address')->nullable();
             $table->string('contact_number', 10)->nullable();
             $table->string('email', 100)->nullable();

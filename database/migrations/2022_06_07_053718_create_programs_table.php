@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('programs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('program_level_id')->nullable()->constrained();
-            $table->string('code');
+            $table->string('code', 20);
             $table->string('description');
             $table->string('comments')->nullable();
             $table->foreignId('created_by')->nullable()->constrained('users');

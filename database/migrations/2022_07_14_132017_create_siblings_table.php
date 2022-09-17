@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('siblings', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('registration_id')->constrained('student_registrations');
+            $table->foreignId('registration_id')->constrained('student_registrations')->onDelete('cascade');
             $table->string('last_name', 50);
             $table->string('first_name', 50);
             $table->string('middle_name', 50)->nullable();
