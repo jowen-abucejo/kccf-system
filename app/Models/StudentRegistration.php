@@ -154,4 +154,14 @@ class StudentRegistration extends Model
     {
         return $this->belongsTo(User::class, 'updated_by')->withTrashed();
     }
+
+    /**
+     * Get the user that owns the StudentRegistration
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class)->withTrashed();
+    }
 }

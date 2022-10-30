@@ -21,7 +21,7 @@ return new class extends Migration
             $table->foreignId('level_id')->constrained();
             $table->foreignId('student_type_id')->constrained();
             $table->string('status', 20)->nullable()->default('ENLISTED');
-            $table->boolean('registration_form_generated')->nullable()->default(false);
+            $table->integer('reg_form_generated')->nullable()->default(0);
             $table->foreignId('created_by')->nullable()->constrained('users');
             $table->foreignId('updated_by')->nullable()->constrained('users');
             $table->foreignId('deleted_by')->nullable()->constrained('users');

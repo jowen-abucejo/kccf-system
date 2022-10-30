@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Subject extends Model
@@ -53,33 +52,43 @@ class Subject extends Model
     }
 
     /**
-     * The (previous) subjects that is equivalent to the Subject
+     * The (previous) subjects that are equivalent to the Subject
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
     public function equivalentPreviousSubjects(): BelongsToMany
     {
-        return $this->belongsToMany(Subject::class, EquivalentSubject::class, 'subject_id', 'equal_subject_id');
+        return $this->belongsToMany(Subject::class, EquivalentSubject::class, 'subject_id', 'equal_subject_id')->withTrashed();
     }
 
     /**
-     * The (newer) subjects that is equivalent to the Subject
+     * The (newer) subjects that are equivalent to the Subject
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
     public function equivalentNewerSubjects(): BelongsToMany
     {
-        return $this->belongsToMany(Subject::class, EquivalentSubject::class, 'equal_subject_id', 'subject_id');
+        return $this->belongsToMany(Subject::class, EquivalentSubject::class, 'equal_subject_id', 'subject_id')->withTrashed();
     }
 
     /**
-     * Get all of the offer subjects for the Subject
+     * Get all of the grades for the Subject
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function offerSubjects(): HasMany
+    public function grades(): HasMany
     {
-        return $this->hasMany(OfferSubject::class);
+        return $this->hasMany(Grade::class)->withTrashed();
+    }
+
+    /**
+     * Get all of the school settings that offer the subject
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function schoolSettings(): BelongsToMany
+    {
+        return $this->belongsToMany(SchoolSetting::class, OfferSubject::class)->withPivot('created_by', 'updated_by',)->withTimestamps()->withTrashed();
     }
 
     /**
@@ -109,7 +118,7 @@ class Subject extends Model
      */
     public function programs(): BelongsToMany
     {
-        return $this->belongsToMany(Program::class, ProgramSubject::class)->withPivot('term_id', 'level_id');
+        return $this->belongsToMany(Program::class, ProgramSubject::class)->withPivot('term_id', 'level_id')->withTimestamps()->withTrashed();
     }
 
     /**

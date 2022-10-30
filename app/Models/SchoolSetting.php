@@ -6,6 +6,7 @@ use App\Traits\UserStamps;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -75,11 +76,11 @@ class SchoolSetting extends Model
     /**
      * Get all of the offer subjects for the SchoolSetting
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
-    public function offerSubjects(): HasMany
+    public function subjects(): BelongsToMany
     {
-        return $this->hasMany(OfferSubject::class);
+        return $this->belongsToMany(Subject::class, OfferSubject::class)->withPivot('id', 'created_by', 'updated_by',)->withTimestamps()->withTrashed();
     }
 
     /**

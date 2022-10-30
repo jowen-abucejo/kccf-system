@@ -1,5 +1,6 @@
 <?php
 
+use Carbon\Carbon;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -22,6 +23,7 @@ return new class extends Migration
             $table->foreignId('level_id')->constrained();
             $table->boolean('regular')->nullable()->default(true);
             $table->foreignId('student_type_id')->constrained();
+            $table->dateTime('admission_datetime')->default(Carbon::now('Asia/Manila')->format('Y-m-d H:i:s'));
             $table->foreignId('created_by')->nullable()->constrained('users');
             $table->foreignId('updated_by')->nullable()->constrained('users');
             $table->foreignId('deleted_by')->nullable()->constrained('users');

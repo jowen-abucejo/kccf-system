@@ -6,6 +6,7 @@ use App\Traits\UserStamps;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class OfferSubject extends Model
@@ -35,6 +36,16 @@ class OfferSubject extends Model
     }
 
     /**
+     * The enrollmentHistory that belong to the OfferSubject
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function enrollmentHistory(): BelongsToMany
+    {
+        return $this->belongsToMany(EnrollmentHistory::class, EnrolledSubject::class)->withTrashed()->withTimestamps();
+    }
+
+    /**
      * Get all of the enrolled subjects for the OfferSubject
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
@@ -45,13 +56,13 @@ class OfferSubject extends Model
     }
 
     /**
-     * Get all of the school setting for the OfferSubject
+     * Get the school setting for the OfferSubject
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function schoolSetting(): HasMany
     {
-        return $this->hasMany(SchoolSetting::class)->withTrashed();
+        return $this->belongsTo(SchoolSetting::class)->withTrashed();
     }
 
     /**

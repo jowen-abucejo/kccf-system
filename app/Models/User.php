@@ -84,6 +84,16 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Get all of the created grade by the User
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function createdGrades(): HasMany
+    {
+        return $this->hasMany(Grade::class, 'created_by')->withTrashed();
+    }
+
+    /**
      * Get all of the created offer subjects by the User
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
@@ -181,6 +191,16 @@ class User extends Authenticatable implements MustVerifyEmail
     public function deletedEnrollmentHistories(): HasMany
     {
         return $this->hasMany(EnrollmentHistory::class, 'deleted_by')->withTrashed();
+    }
+
+    /**
+     * Get all of the soft deleted grades by the User
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function deletedGrades(): HasMany
+    {
+        return $this->hasMany(Grade::class, 'deleted_by')->withTrashed();
     }
 
     /**
@@ -321,6 +341,16 @@ class User extends Authenticatable implements MustVerifyEmail
     public function updatedEnrollmentHistories(): HasMany
     {
         return $this->hasMany(EnrollmentHistory::class, 'updated_by')->withTrashed();
+    }
+
+    /**
+     * Get all of the updated grades by the User
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function updatedGrades(): HasMany
+    {
+        return $this->hasMany(Grade::class, 'updated_by')->withTrashed();
     }
 
     /**

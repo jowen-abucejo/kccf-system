@@ -30,9 +30,19 @@ class Student extends Model
         'level_id',
         'regular',
         'student_type_id',
+        'admission_datetime',
         'created_by',
         'updated_by',
         'deleted_by'
+    ];
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'admission_datetime' => 'datetime',
     ];
 
     /**
@@ -62,7 +72,17 @@ class Student extends Model
      */
     public function enrollmentHistories(): HasMany
     {
-        return $this->hasMany(EnrollmentHistory::class);
+        return $this->hasMany(EnrollmentHistory::class)->withTrashed();
+    }
+
+    /**
+     * Get all of the grades for the Student
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function grades(): HasMany
+    {
+        return $this->hasMany(Grade::class)->withTrashed();
     }
 
     /**

@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('school_settings', function (Blueprint $table) {
             $table->id();
-            $table->string('academic_year');
+            $table->string('academic_year', 9);
             $table->foreignId('term_id')->constrained();
             $table->dateTime('encoding_start_date')->nullable();
             $table->dateTime('encoding_end_date')->nullable();

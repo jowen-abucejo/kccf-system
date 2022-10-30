@@ -30,7 +30,15 @@ trait UserStamps
         static::deleting(function ($model) {
             if (Schema::hasColumn($model->getTable(), 'deleted_by') && auth()->user()) {
                 $model->deleted_by = auth()->user()->id;
+                $model->save();
             }
         });
+
+        //!Restoring events automatically triggered in OfferSubjects 
+        // static::restoring(function ($model) {
+        //     if (Schema::hasColumn($model->getTable(), 'deleted_by') && auth()->user()) {
+        //         $model->deleted_by = null;
+        //     }
+        // });
     }
 }

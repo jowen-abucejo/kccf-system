@@ -12,9 +12,20 @@ class ProgramSubjectController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $only_subjects = boolval($request->only_subject_ids);
+        $programs_subjects = ProgramSubject::withTrashed(boolval($request->withTrashed))->with(['subject'])
+            ->when($request->term_id, function ($query) use ($request, $only_subjects) {
+                $query->distinct();
+                $query->when($only_subjects, function ($query) use ($request) {
+                    $query->select('subject_id');
+                })->where('term_id', $request->term_id);
+            })
+            ->get();
+
+        if ($only_subjects) $programs_subjects = $programs_subjects->pluck('subject_id');
+        return response()->json($programs_subjects);
     }
 
     /**

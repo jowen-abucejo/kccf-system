@@ -13,14 +13,18 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('program_subjects', function (Blueprint $table) {
+        Schema::create('grades', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('program_id')->nullable()->constrained()->onDelete('cascade');
+            $table->foreignId('enrolled_subject_id')->nullable()->constrained();
+            $table->foreignId('student_id')->nullable()->constrained();
             $table->foreignId('subject_id')->nullable()->constrained();
+            $table->string('academic_year', 9)->nullable();
             $table->foreignId('term_id')->nullable()->constrained();
-            $table->foreignId('level_id')->nullable()->constrained();
-            $table->foreignId('created_by')->nullable()->constrained('users');
-            $table->foreignId('updated_by')->nullable()->constrained('users');
+            $table->decimal('numeric_grade', 3, 2)->nullable();
+            $table->string('gpa', 10)->nullable();
+            $table->string('remarks', 10)->nullable()->default('PASSED');
+            $table->foreignId('created_by')->constrained('users');
+            $table->foreignId('updated_by')->constrained('users');
             $table->foreignId('deleted_by')->nullable()->constrained('users');
             $table->timestamps();
             $table->softDeletes();
@@ -34,6 +38,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('program_subjects');
+        Schema::dropIfExists('grades');
     }
 };

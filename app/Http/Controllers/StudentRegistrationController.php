@@ -6,6 +6,7 @@ use App\Mail\NewPassword;
 use App\Models\StudentRegistration;
 use App\Models\User;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -65,8 +66,10 @@ class StudentRegistrationController extends Controller
             if (count($data['family_info']['siblings']) > 0)
                 $registration->siblings()->createMany($data['family_info']['siblings']);
 
-            $data['mother_info']['address'] = $data['mother_info']['same_address'] ? $data['basic_info']['address'] : $data['mother_info']['address'];
-            $data['father_info']['address'] = $data['father_info']['same_address'] ? $data['basic_info']['address'] : $data['father_info']['address'];
+            if (!boolval($data['mother_info']['is_deceased']))
+                $data['mother_info']['address'] = $data['mother_info']['same_address'] ? $data['basic_info']['address'] : $data['mother_info']['address'];
+            if (!boolval($data['father_info']['is_deceased']))
+                $data['father_info']['address'] = $data['father_info']['same_address'] ? $data['basic_info']['address'] : $data['father_info']['address'];
 
             $guardians = array($data['mother_info'], $data['father_info']);
 
@@ -107,6 +110,8 @@ class StudentRegistrationController extends Controller
             ]);
             $new_user->assignRole('student');
 
+            $registration->user()->associate($new_user)->save();
+
             //create student record for the registration
             $student =  $new_user->student()->create([
                 'user_id' => $new_user->id,
@@ -114,23 +119,28 @@ class StudentRegistrationController extends Controller
                 'program_id' => $data['admission_details']['program_id'],
                 'level_id' => $data['admission_details']['level_id'],
                 'student_type_id' => $data['admission_details']['student_type_id'],
+                'admission_datetime' => $data['admission_details']['registration_date'] ?? Carbon::now("Asia/Manila")->format('Y-m-d H:i:s')
             ]);
 
             //associate the new student to the registration model
             $registration->student()->associate($student)->save();
-
-            //Update registration date if provided
-            if ($data['admission_details']['registration_date']) {
-                $student->created_at = $data['admission_details']['registration_date'];
-                $student->save();
-            }
         } catch (\Throwable $th) {
-            if ($registration)
-                $registration->delete();
+            if (isset($registration) && $registration) {
+                if ($registration->student()->count() > 0) {
+                    $registration->student()->forceDelete();
+                } else {
+                    $registration->delete();
+                }
+
+                if (isset($new_user)) {
+                    $new_user->roles()->detach();
+                    $new_user->forceDelete();
+                }
+            }
             return response()->json(
                 [
                     "error" => "Student Registration Failed!",
-                    "message" => "Please try again.",
+                    "message" => $th->getMessage(),
                 ],
                 500
             );
@@ -148,11 +158,7 @@ class StudentRegistrationController extends Controller
 
 
         return response()->json(
-            $student->fresh([
-                'level', 'program', 'registration.educationBackgrounds', 'registration.guardians',
-                'registration.level', 'registration.program', 'registration.schoolSetting',
-                'registration.siblings', 'schoolSetting'
-            ])
+            app('App\Http\Controllers\StudentController')->show($student->id)
         );
     }
 
@@ -240,10 +246,10 @@ class StudentRegistrationController extends Controller
                         'middle_name' => $guardian['middle_name'],
                         'name_suffix' => array_key_exists('name_suffix', $guardian) ? $guardian['name_suffix'] : '',
                         'birth_date' => $guardian['birth_date'],
-                        'occupation' => $guardian['occupation'],
-                        'address' => $guardian['address'],
-                        'contact_number' => $guardian['contact_number'],
-                        'email' => $guardian['email'],
+                        'occupation' => $guardian['occupation'] ?? null,
+                        'address' => $guardian['address'] ?? null,
+                        'contact_number' => $guardian['contact_number'] ?? null,
+                        'email' => $guardian['email'] ?? null,
                         'relationship' => $guardian['relationship'],
                         'is_deceased' => $guardian['is_deceased'],
                         'is_guardian' => $guardian['is_guardian'],
@@ -299,8 +305,10 @@ class StudentRegistrationController extends Controller
                 $student->level_id = $data['admission_details']['level_id'];
                 $student->school_setting_id = $data['admission_details']['school_setting_id'];
                 $student->student_type_id = $data['admission_details']['student_type_id'];
-                $student->save();
             }
+
+            $student->admission_datetime = $data['admission_details']['registration_date'];
+            $student->save();
 
 
             //send email notification if email was updated
@@ -322,19 +330,15 @@ class StudentRegistrationController extends Controller
         } catch (\Throwable $th) {
             return response()->json(
                 [
-                    "error" => "Profile Update Failed!",
-                    "message" => "Please try again.",
+                    "error" => "Student Admission Update Failed!",
+                    "message" => $th->getMessage(),
                 ],
                 500
             );
         }
 
         return response()->json(
-            $student->fresh([
-                'level', 'program', 'registration.educationBackgrounds', 'registration.guardians',
-                'registration.level', 'registration.program', 'registration.schoolSetting',
-                'registration.siblings', 'schoolSetting', 'enrollmentHistories'
-            ])
+            app('App\Http\Controllers\StudentController')->show($student->id)
         );
     }
 

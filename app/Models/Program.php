@@ -57,7 +57,7 @@ class Program extends Model
      */
     public function enrollmentHistories(): HasMany
     {
-        return $this->hasMany(EnrollmentHistory::class);
+        return $this->hasMany(EnrollmentHistory::class)->withTrashed();
     }
 
     /**
@@ -97,7 +97,7 @@ class Program extends Model
      */
     public function subjects(): BelongsToMany
     {
-        return $this->belongsToMany(Subject::class, ProgramSubject::class)->withPivot('level_id', 'term_id');
+        return $this->belongsToMany(Subject::class, ProgramSubject::class)->withPivot('level_id', 'term_id', 'deleted_at', 'deleted_by')->withTimestamps()->withTrashed();
     }
 
     /**

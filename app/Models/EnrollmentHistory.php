@@ -6,6 +6,7 @@ use App\Traits\UserStamps;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -25,7 +26,7 @@ class EnrollmentHistory extends Model
         'level_id',
         'student_type_id',
         'status',
-        'registration_form_generated',
+        'reg_form_generated',
         'created_by',
         'updated_by',
         'deleted_by'
@@ -69,6 +70,16 @@ class EnrollmentHistory extends Model
     public function level(): BelongsTo
     {
         return $this->belongsTo(Level::class)->withTrashed();
+    }
+
+    /**
+     * The offerSubjects that belong to the EnrollmentHistory
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function offerSubjects(): BelongsToMany
+    {
+        return $this->belongsToMany(OfferSubject::class, EnrolledSubject::class)->withTimestamps();
     }
 
     /**

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Program;
 use App\Models\ProgramSubject;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -21,13 +22,13 @@ class ProgramController extends Controller
         $like = 'LIKE';
 
         $programs = Program::when($request->withTrashed, function ($query) use ($search, $like) {
-            $query->withTrashed()->with('programLevel')
+            $query->withTrashed()->with(['programLevel'])->withCount(['enrollmentHistories', 'students', 'studentRegistrations'])
                 ->when($search, function ($query) use ($search, $like) {
                     $query->where('code', $like, '%' . $search . '%')
                         ->orWhere('description', $like, '%' . $search . '%');
                 });
         })
-            ->when($request->program_status != 'ALL', function ($query) use ($request) {
+            ->when($request->exists('program_status') && $request->program_status != 'ALL', function ($query) use ($request) {
                 $query->when($request->program_status == 'ACTIVE', function ($query) {
                     $query->whereNull('deleted_at');
                 })
@@ -35,7 +36,7 @@ class ProgramController extends Controller
                         $query->whereNotNull('deleted_at');
                     });
             })
-            ->when(boolval($request->pl), function ($query) use ($request) {
+            ->when($request->exists('pl'), function ($query) use ($request) {
                 $query->whereIn('program_level_id', $request->input('pl'));
             })
             ->orderBy('code', 'ASC')->orderBy('description', 'ASC');
@@ -98,7 +99,7 @@ class ProgramController extends Controller
         }
 
         ProgramSubject::upsert($to_add_subjects, ['program_id', 'subject_id', 'term_id', 'level_id', 'created_by', 'updated_by'], []);
-        return response()->json($new_program->fresh('programLevel'));
+        return response()->json($new_program->fresh(['programLevel'])->loadCount('enrollmentHistories', 'students', 'studentRegistrations'));
     }
 
     /**
@@ -110,8 +111,8 @@ class ProgramController extends Controller
      */
     public function show(Request $request, $program)
     {
-        return Program::withTrashed()->with(['subjects' => function ($query) use ($request) {
-            $query->withTrashed(boolval($request->withTrashed))->withCount('offerSubjects');
+        return Program::withTrashed()->with(['programLevel', 'subjects' => function ($query) use ($request) {
+            $query->whereNull('program_subjects.deleted_at')->withTrashed(boolval($request->withTrashed))->withCount('schoolSettings');
         }])->findOrFail($program);
     }
 
@@ -124,7 +125,7 @@ class ProgramController extends Controller
      */
     public function update(Request $request, $program)
     {
-        $update_program = Program::withTrashed()->findOrFail($program);
+        $update_program = Program::withTrashed()->with('programLevel')->findOrFail($program);
         $data = $request->new_program;
 
         $update_program->update([
@@ -133,22 +134,60 @@ class ProgramController extends Controller
             'program_level_id' => $data['program_level_id'],
         ]);
 
+        //subjects to sync
         $to_add_subjects = $data['subjects'];
 
+
+        //restore if subject is already attached but soft deleted, create if not yet attached
         foreach ($to_add_subjects as $ps) {
-            ProgramSubject::updateOrCreate([
-                'program_id' => $ps['program_id'],
-                'subject_id' => $ps['subject_id']
-            ], [
-                'term_id' => $ps['term_id'],
-                'level_id' => $ps['level_id'],
-            ]);
+            $program_subject = ProgramSubject::withTrashed()->where([
+                [
+                    'program_id', '=', $ps['program_id'],
+                ],
+                [
+                    'subject_id', '=', $ps['subject_id']
+                ]
+            ])->first()
+                ?: ProgramSubject::create([
+                    'program_id' => $ps['program_id'],
+                    'subject_id' => $ps['subject_id'],
+                    'term_id' => $ps['term_id'],
+                    'level_id' => $ps['level_id'],
+
+                ]);
+            if ($program_subject->trashed()) {
+                $program_subject->restore();
+            }
+
+            $program_subject->term_id = $ps['term_id'];
+            $program_subject->level_id = $ps['level_id'];
+
+            $program_subject->save();
         }
 
+        //ids of subject to attached
         $subject_ids = array_column($to_add_subjects, 'subject_id');
-        $update_program->subjects()->sync($subject_ids);
 
-        return response()->json($update_program->fresh('programLevel'));
+        //subject ids that will be detached
+        $pending_detach_subjects = ProgramSubject::withTrashed()->whereNotIn('subject_id', $subject_ids)->where('program_id', $update_program->id)->get();
+        $to_soft_delete_program_subjects = array();
+
+        if ($pending_detach_subjects->count() > 0) {
+            foreach ($pending_detach_subjects as $ps) {
+                //check if subject id should be soft deleted/detached only from program
+                $enrolled_subject_count = app('App\Http\Controllers\EnrolledSubjectController')->countEnrolledSubjects($update_program->id, $ps->subject_id);
+                if ($enrolled_subject_count) {
+                    array_push($to_soft_delete_program_subjects, $ps->subject_id);
+                }
+            }
+            //keep soft deleted subject ids
+            $subject_ids = array_merge($subject_ids, $to_soft_delete_program_subjects);
+        }
+
+        $update_program->subjects()->sync($subject_ids);
+        ProgramSubject::whereIn('subject_id', $to_soft_delete_program_subjects)->update(["deleted_at" => Carbon::now()]);
+
+        return response()->json($update_program->fresh(['programLevel'])->loadCount('enrollmentHistories', 'students', 'studentRegistrations'));
     }
 
     /**
@@ -160,10 +199,22 @@ class ProgramController extends Controller
      */
     public function destroy(Request $request,  $program)
     {
-        $program = Program::withTrashed()->findOrFail($program);
+        $deleted_program = Program::withTrashed()->withCount('enrollmentHistories', 'students', 'studentRegistrations')->findOrFail($program);
 
         if (boolval($request->forceDelete)) {
-            $program->forceDelete();
+            $enrollment_count = $deleted_program->enrollment_histories_count;
+            $student_count = $deleted_program->students_count;
+            $admission_count = $deleted_program->student_registrations_count;
+            if ($enrollment_count > 0 || $student_count > 0 || $admission_count > 0) {
+                return response()->json(
+                    [
+                        "error" => "Unable to Delete Curriculum!",
+                        "message" => "Curriculum is currently associated to $enrollment_count enrollment/s, $student_count student/s and $admission_count admission/s",
+                    ],
+                    500
+                );
+            }
+            $deleted_program->forceDelete();
             return response()->json(
                 [
                     "message" => "Program Permanently Deleted!",
@@ -173,14 +224,14 @@ class ProgramController extends Controller
         }
 
         if (boolval($request->toggle)) {
-            if ($program->trashed()) {
-                $program->restore();
+            if ($deleted_program->trashed()) {
+                $deleted_program->restore();
             } else {
-                $program->delete();
+                $deleted_program->delete();
             }
             return response()->json(
                 [
-                    "deleted_at" => $program->deleted_at,
+                    "deleted_at" => $deleted_program->deleted_at,
                 ],
                 200
             );

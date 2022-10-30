@@ -21,28 +21,46 @@ class SubjectController extends Controller
         $search = $request->search ?? '';
         $like = 'LIKE';
 
-        $subjects = Subject::when($request->withTrashed, function ($query) use ($search, $like) {
-            $query->withTrashed()
-                ->when($search, function ($query) use ($search, $like) {
+        $subjects = Subject::withTrashed(boolval($request->withTrashed))->with(['equivalentNewerSubjects', 'equivalentPreviousSubjects', 'preRequisiteSubjects'])
+            ->withCount(['programs', 'preRequisiteForSubjects', 'schoolSettings'])
+            ->when($search, function ($query) use ($search, $like) {
+                $query->where(function ($query) use ($search, $like) {
                     $query->where('code', $like, '%' . $search . '%')
                         ->orWhere('description', $like, '%' . $search . '%');
                 });
-        })
-            ->when(boolval($request->p), function ($query) use ($request) {
-                $query->whereHas(
-                    'programs',
-                    function ($query) use ($request) {
-                        $query->whereIn('programs.id', $request->input('p'));
-                    }
-                );
             })
-            ->when($request->subject_status != 'ALL', function ($query) use ($request) {
-                $query->when($request->subject_status == 'ACTIVE', function ($query) {
-                    $query->whereNull('deleted_at');
-                })
-                    ->when($request->subject_status == 'INACTIVE', function ($query) {
-                        $query->whereNotNull('deleted_at');
+            ->when(($request->exists('subject_status') && $request->subject_status == 'ACTIVE'), function ($query) use ($request) {
+                $query->whereNull('deleted_at');
+            })
+            ->when(($request->exists('subject_status') && $request->subject_status == 'INACTIVE'), function ($query) {
+                $query->whereNotNull('deleted_at');
+            })
+            ->when($request->exists('p'), function ($query) use ($request) {
+                $program_filters = $request->input('p');
+                $withNoPrograms = in_array(0, $program_filters);
+                $query->where(function ($query) use ($program_filters, $withNoPrograms) {
+                    $query->when($withNoPrograms, function ($query)  use ($program_filters) {
+                        $query->whereDoesntHave('programs')
+                            ->orWhereHas('programs', function ($query) use ($program_filters) {
+                                $query->whereIn('program_id', $program_filters);
+                            });
+                    })->when(!$withNoPrograms, function ($query)  use ($program_filters) {
+                        $query->whereHas('programs', function ($query) use ($program_filters) {
+                            $query->whereIn('program_id', $program_filters);
+                        });
                     });
+                });
+            })
+            ->when($request->exists('t'), function ($query) use ($request) {
+                $term_filters = $request->input('t');
+                $query->whereHas('programs', function ($query) use ($term_filters) {
+                    $query->when(in_array(0, $term_filters), function ($query)  use ($term_filters) {
+                        $query->whereNull('term_id')
+                            ->orWhereIn('term_id', $term_filters);
+                    })->when(!in_array(0, $term_filters), function ($query)  use ($term_filters) {
+                        $query->whereIn('term_id', $term_filters);
+                    });
+                });
             })
             ->orderBy('code', 'ASC')->orderBy('description', 'ASC');
 
@@ -99,7 +117,10 @@ class SubjectController extends Controller
             'lab_units' => $data['lab_units'],
             'lec_units' => $data['lec_units'],
         ]);
-        return response()->json($new_subject->fresh());
+
+        $new_subject->equivalentPreviousSubjects()->sync($data['equivalent_subjects']);
+
+        return response()->json($new_subject->fresh(['equivalentPreviousSubjects', 'equivalentNewerSubjects'])->loadCount(['programs', 'schoolSettings', 'preRequisiteForSubjects']));
     }
 
     /**
@@ -110,7 +131,7 @@ class SubjectController extends Controller
      */
     public function show(Subject $subject)
     {
-        //
+        return $subject->fresh(['equivalentPreviousSubjects', 'equivalentNewerSubjects'])->loadCount(['programs', 'schoolSettings', 'preRequisiteForSubjects']);
     }
 
     /**
@@ -160,7 +181,10 @@ class SubjectController extends Controller
             'lec_units' => $data['lec_units'],
         ]);
 
-        return response()->json($update_subject->fresh());
+        $update_subject->equivalentPreviousSubjects()->sync($data['equivalent_subjects']);
+        $update_subject->preRequisiteSubjects()->sync($data['prerequisite_subjects']);
+
+        return response()->json($update_subject->fresh(['equivalentPreviousSubjects', 'equivalentNewerSubjects', 'preRequisiteSubjects'])->loadCount(['programs', 'schoolSettings', 'preRequisiteForSubjects']));
     }
 
     /**
@@ -172,9 +196,23 @@ class SubjectController extends Controller
      */
     public function destroy(Request $request,  $subject)
     {
-        $subject = subject::withTrashed()->findOrFail($subject);
+        $subject = Subject::withTrashed()->withCount(['equivalentNewerSubjects', 'equivalentPreviousSubjects', 'programs', 'preRequisiteForSubjects', 'schoolSettings'])->findOrFail($subject);
 
         if (boolval($request->forceDelete)) {
+            $associated_subjects = $subject->equivalent_newer_subjects_count + $subject->equivalent_previous_subjects_count + $subject->prerequisite_for_subjects_count;
+            $associated_programs = $subject->programs_count;
+            $associated_school_settings = $subject->school_settings_count;
+            if ($associated_programs > 0 || $associated_subjects > 0) {
+                return response()->json(
+                    [
+                        "error" => "Unable to Delete Subject!",
+                        "message" => "Subject is currently associated to $associated_programs program/s, $associated_subjects subject/s and offered in $associated_school_settings semester/s",
+                    ],
+                    500
+                );
+            }
+
+            $subject->preRequisiteSubjects()->detach();
             $subject->forceDelete();
             return response()->json(
                 [

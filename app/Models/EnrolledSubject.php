@@ -6,6 +6,7 @@ use App\Traits\UserStamps;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class EnrolledSubject extends Model
 {
@@ -42,6 +43,16 @@ class EnrolledSubject extends Model
     public function enrollmentHistory(): BelongsTo
     {
         return $this->belongsTo(EnrollmentHistory::class)->withTrashed();
+    }
+
+    /**
+     * Get the grade associated with the EnrolledSubject
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function grade(): HasOne
+    {
+        return $this->hasOne(Grade::class)->withTrashed();
     }
 
     /**
